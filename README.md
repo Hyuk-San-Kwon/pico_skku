@@ -15,7 +15,9 @@ https://github.com/paulober/MicroPico/wiki/Linux
 하단에 all commands가 있는데 이걸로 피코 조작 가능
 
 --> upload project pico 하면 폴더안에 있는 모든 코드들이 피코 안에 들어가서 전원공급시 main.py 자동실행
+
 --> 중앙 하단에 Toggle pico-W-FS 실행시 좌측 탐색기에 피코 내부 파일 확인 가능
+
 --> Delete all files from board 피코 내부 파일 전부제거 
 
 reset이나 이런건 알아서
