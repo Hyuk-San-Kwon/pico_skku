@@ -5,6 +5,7 @@ import os
 WIFI_ID = 'KT_GIGA_5G_718E'
 WIFI_PWD = '34dk16jg15'
 SLEEP_TIME = 1 # 일단은 디버깅 쉽게 1초로 설정
+EMERGENCY_TIME = 10
 
 boot_time = time.time()
 time_disconnected = 0
@@ -18,27 +19,28 @@ wlan.active(True)
 wlan.connect(WIFI_ID, WIFI_PWD)
 
 while True:
-
-    if not wlan.isconnected() and wlan.status() >= 0: #diconnected state
+    print(wlan.isconnected(), wlan.status())
+    if not wlan.isconnected() and wlan.status() != 0 and time_disconnected < EMERGENCY_TIME: #diconnected state
         print("Disconnected state")
-        if not time_disconnected:
-            time_disconnected = time.time() - boot_time
+        print(time_disconnected)
+        time_disconnected += 1
         with open('log.txt', 'a') as f:
-            f.write('Disconnected state: ' + str(time.time() - boot_time))
+            f.write('Disconnected state: ' + str(time_disconnected))
             f.write('\n')
         time.sleep(SLEEP_TIME)
-    if time_disconnected - time.time() > 500: # emergency state
+    elif time_disconnected >= EMERGENCY_TIME: # emergency state
         print('Emgergeny state')
+        time_disconnected += 1
         with open('log.txt', 'a') as f:
-            f.write('Disconnected state: ' + str(time.time() - boot_time))
+            f.write('Disconnected state: ' + str(time_disconnected))
             f.write('\n')
         time.sleep(SLEEP_TIME)
-    else: # normal state
+    elif wlan.isconnected() and wlan.status() == 0: # normal state
         print("Connected state")
         if time_disconnected:
             time_disconnected = 0
         with open('log.txt', 'a') as f:
-            f.write('Connected state: ' + str(time.time() - boot_time))
+            f.write('Connected state: ' + str(time_disconnected))
             f.write('\n')
         print(wlan.ifconfig())
         time.sleep(SLEEP_TIME)
