@@ -12,6 +12,8 @@ https://randomnerdtutorials.com/raspberry-pi-pico-vs-code-micropython/#flash-mic
 https://github.com/paulober/MicroPico/wiki/Linux 
 배쉬 파일 실행
 
+
+
 근데 이 방법은 pico 파일 내부 자체는 못 보는 듯?
 해결되면 따로 공지
 
