@@ -12,10 +12,17 @@ https://randomnerdtutorials.com/raspberry-pi-pico-vs-code-micropython/#flash-mic
 https://github.com/paulober/MicroPico/wiki/Linux 
 배쉬 파일 실행
 
+하단에 all commands가 있는데 이걸로 피코 조작 가능
 
+--> upload project pico 하면 폴더안에 있는 모든 코드들이 피코 안에 들어가서 전원공급시 main.py 자동실행
+--> 중앙 하단에 Toggle pico-W-FS 실행시 좌측 탐색기에 피코 내부 파일 확인 가능
+--> Delete all files from board 피코 내부 파일 전부제거 
 
-근데 이 방법은 pico 파일 내부 자체는 못 보는 듯?
-해결되면 따로 공지
+reset이나 이런건 알아서
+
+근데 안에 돌아가는 로그 보려면 결국엔 sudo minicom -D /dev/ttyACM0 로 접근해야하는건데
+VScode도 피코랑 접근하다보니 둘이 충돌이 나더라고요
+그래서 테스트시에는 VScode 끄고 하시는거 추천드립니다.
 
 3. thonny 설치하기
 
@@ -51,6 +58,3 @@ log.txt에 로그 저장하는 방식. 디버깅 쉽게 하기 위해
 
 WIFI_ID, WIFI_PWD는 추후 블루투스로 입력한 후 가져오게 설계할 예정
 지금은 하드코딩하자
-
-
-그밖에도 pico w documentation 보면 http 통신하고 여러 예제들 있으니 보시면 좋을듯 합니다. 앱 인벤터, firebase 예제도 꽤나 있더라고요. 
