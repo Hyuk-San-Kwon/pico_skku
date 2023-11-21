@@ -62,4 +62,5 @@ WIFI_ID, WIFI_PWD는 추후 블루투스로 입력한 후 가져오게 설계할
 지금은 하드코딩하자
 
 firebase-to-pico.py
+
 firebase database에서 핸드폰 번호 가져오는 코드
