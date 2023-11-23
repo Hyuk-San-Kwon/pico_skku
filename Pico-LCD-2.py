@@ -4,14 +4,16 @@ import framebuf
 import time
 import os
 
+##################### FIREBASE ########################
+import network
+import urequests
+
 BL = 13
 DC = 8
 RST = 12
 MOSI = 11
 SCK = 10
 CS = 9
-
-
 
 '2inch frames'
 class LCD_2inch(framebuf.FrameBuffer):
@@ -195,6 +197,39 @@ class LCD_2inch(framebuf.FrameBuffer):
 
 
 if __name__=='__main__':
+    # WLAN 객체를 생성하고, 무선 LAN을 활성화합니다
+    wlan = network.WLAN(network.STA_IF)
+    wlan.active(True)
+
+    # 와이파이에 연결합니다
+    if not wlan.isconnected():
+        wlan.connect("AndroidHotspot", "minakusi12400") # 와이파이 정보 입력
+        print("Waiting for Wi-Fi connection", end="...")
+        while not wlan.isconnected():
+            print(".", end="")
+            time.sleep(1)
+    else:
+        print(wlan.ifconfig())
+        print("WiFi is Connected")
+
+    print("Wifi is connected")
+
+    # Firebase의 Realtime Database와 연결하기 위한 URL을 설정합니다
+    url = "https://embeded-system-e8163-default-rtdb.firebaseio.com/"
+
+    initial_string = "0"
+    # 초기 상태를 설정하여 Firebase에 업데이트합니다
+    initial_state = {'phone': initial_string}
+    urequests.patch(url+"/embeded_system.json", json = initial_state).json()
+
+    phone_number = "0"
+    
+    # 처음 핸드폰 번호 설정        
+    response = urequests.get(url+"/embeded_system.json").json()
+    while (response == phone_number and phone_number == "0"):
+        print("Waiting for the update of phone number...")
+    phone_number = response['phone']
+
     pwm = PWM(Pin(BL))
     pwm.freq(1000)
     pwm.duty_u16(32768)#max 65535
@@ -202,15 +237,17 @@ if __name__=='__main__':
     LCD = LCD_2inch()
     #color BRG
     LCD.fill(LCD.WHITE)
-
+    
     
     while(1):
-        phone_number='0123456789'
+        if wlan.isconnected():
+            if (phone_number != response['phone']): # 값이 바뀌었을 때만 phone number 업데이트
+                phone_number = response['phone']
         
         for i, number in enumerate(phone_number):
-                x = (i % 6) * (50)+5  
-                y = (i // 6) * (90 + 20)+10  
-                LCD.draw_number(number, x, y, LCD.BLACK)
+            x = (i % 6) * (50)+5  
+            y = (i // 6) * (90 + 20)+10  
+            LCD.draw_number(number, x, y, LCD.BLACK)
         
         '''for i in range(len(phone_number)): #렌즈 있을 때 
             number = phone_number[-(i + 1)]
