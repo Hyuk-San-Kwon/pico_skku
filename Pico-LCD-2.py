@@ -203,7 +203,7 @@ if __name__=='__main__':
 
     # 와이파이에 연결합니다
     if not wlan.isconnected():
-        wlan.connect("AndroidHotspot", "minakusi12400") # 와이파이 정보 입력
+        wlan.connect("", "") # 와이파이 정보 입력
         print("Waiting for Wi-Fi connection", end="...")
         while not wlan.isconnected():
             print(".", end="")
@@ -226,9 +226,11 @@ if __name__=='__main__':
     
     # 처음 핸드폰 번호 설정        
     response = urequests.get(url+"/embeded_system.json").json()
-    while (response == phone_number and phone_number == "0"):
+    while (response["phone"] == phone_number):
+        response = urequests.get(url+"/embeded_system.json").json()
         print("Waiting for the update of phone number...")
     phone_number = response['phone']
+    print(f"Updated phone number to {phone_number}")
 
     pwm = PWM(Pin(BL))
     pwm.freq(1000)
@@ -240,8 +242,9 @@ if __name__=='__main__':
     
     
     while(1):
-        if wlan.isconnected():
-            if (phone_number != response['phone']): # 값이 바뀌었을 때만 phone number 업데이트
+        if wlan.isconnected(): # 값이 바뀌었을 때만 phone number 업데이트
+            response = urequests.get(url+"/embeded_system.json").json()
+            if (phone_number != response['phone']): 
                 phone_number = response['phone']
         
         for i, number in enumerate(phone_number):
