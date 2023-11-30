@@ -162,7 +162,7 @@ class LCD_2inch(framebuf.FrameBuffer):
         self.cs(1)
     def draw_number(self, num, x, y, color):
         # 숫자별 사각형 정의 (크기 조정)
-       numbers = {
+       '''numbers = {
             '0': [(x, y, 45, 18), (x, y, 10, 90), (x + 35, y, 10, 90), (x, y + 72, 45, 18)],
             '1': [(x + 17, y, 10, 90)],
             '2': [(x, y, 45, 18), (x + 35, y, 10, 36), (x, y + 36, 45, 18), (x, y + 36, 10, 36), (x, y + 72, 45, 18)],
@@ -174,8 +174,8 @@ class LCD_2inch(framebuf.FrameBuffer):
             '8': [(x, y, 45, 18), (x, y, 10, 90), (x + 35, y, 10, 90), (x, y + 36, 45, 18), (x, y + 72, 45, 18)],
             '9': [(x, y, 45, 18), (x, y, 10, 54), (x + 35, y, 10, 90), (x, y + 36, 45, 18), (x, y + 72, 45, 18)],
             '-': [(x,y+45,20,10)]
-        }
-       '''numbers = {
+        }'''
+       numbers = {
     '0': [(x, y + 72, 45, 18), (x + 35, y, 10, 90), (x, y, 10, 90), (x, y, 45, 18)],
     '1': [(x + 18, y, 10, 90)],
     '2': [(x, y + 72, 45, 18), (x, y + 18, 10, 36), (x, y + 36, 45, 18), (x + 35, y + 54, 10, 36), (x, y, 45, 18)],
@@ -257,18 +257,6 @@ if __name__=='__main__':
     lcd_timer=None
     
     while(1):
-        if wlan.isconnected():
-            if lcd_timer:
-                lcd_timer.deinit()  # 타이머 중지
-                lcd_timer = None
-                LCD.bl.value(0)  # 백라이트 끄기
-        if not wlan.isconnected():
-            if not lcd_timer:
-                lcd_timer = Timer(-1)
-                lcd_timer.init(period=5000, mode=Timer.PERIODIC, callback=polling_timer)
-        
-        time.sleep(0.1)
-    '''
         if wlan.isconnected(): # 값이 바뀌었을 때만 phone number 업데이트
             #
             LCD.bl.value(0)
@@ -284,17 +272,17 @@ if __name__=='__main__':
                  lcd_timer = None
             #   
         #
-        #if not wlan.isconnected():
-            #if not lcd_timer:
-                #lcd_timer=Timer(period=1000,mode=Timer.ONE_SHOT,callback=polling_timer)
+        if not wlan.isconnected():
+            if not lcd_timer:
+                lcd_timer=Timer(period=1000,mode=Timer.ONE_SHOT,callback=polling_timer)
         #
         for i, number in enumerate(phone_number):  #렌즈 있을 때 
-            x = (i % 6) * 50 + 5
-            y = ((1 if i < 6 else 0)) * (90 + 20) + 10
+            x = (310-((i % 6) * 50 + 15) if i<6 else 280-((i % 6) * 50 + 15))
+            y = ((0 if i < 6 else 1)) * (90 + 20) + 10
             LCD.draw_number(number, x, y, LCD.BLACK)
         
         LCD.show()
     time.sleep(0.1)
-    '''
+    
         
         
