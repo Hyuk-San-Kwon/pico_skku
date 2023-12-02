@@ -201,9 +201,9 @@ class LCD_2inch(framebuf.FrameBuffer):
                 y = ((1 if i < 6 else 0)) * (90 + 20) + 10
                 LCD.draw_number(number, x, y, LCD.BLACK)
             
-            LCD.show()
+            self.show()
         else:
-            LCD.bl.value(0)  # 백라이트 끄기
+            self.bl.value(0)  # 백라이트 끄기
   
 
 
