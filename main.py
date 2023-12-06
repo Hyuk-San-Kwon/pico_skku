@@ -4,7 +4,7 @@ import time
 from get_wifi import setup_mode
 from phew import access_point, connect_to_wifi, is_connected_to_wifi, dns, server
 from phew.template import render_template
-from tools.allocations import print_mem, print_storage
+from tools.allocations import print_mem
 import json
 import machine
 import os
@@ -12,7 +12,6 @@ import utime
 import _thread
 
 print_mem()
-print_storage()
 
 AP_NAME = "pi pico"
 AP_DOMAIN = "pipico.net"
@@ -56,8 +55,7 @@ while True:
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
     wlan.connect(WIFI_ID, WIFI_PWD)
-    print_mem()
-    print_storage()
+
     print(wlan.isconnected() , wlan.status())
     if not wlan.isconnected() and wlan.status() != 0 and time_disconnected < EMERGENCY_TIME: #diconnected state
         print("Disconnected state")
