@@ -34,6 +34,8 @@ VScode도 피코랑 접근하다보니 둘이 충돌이 나더라고요
 UI가 불편해서 파일 보는데만 쓰는거 추천
 
 ## 파일 설명
+LCD_final.py
+--> state 업데이트/wifi connect&disconnect/ timer polling 최종 구현 완료
 
 ble_advertising.py 
 
