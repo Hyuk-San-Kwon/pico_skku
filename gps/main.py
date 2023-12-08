@@ -1,121 +1,108 @@
+import time
+import network
+
+from get_wifi import setup_mode
+from get_KR_time import get_time
+from phew import server
+from get_gps import getPositionData 
 from machine import Pin, UART, I2C
-from ssd1306 import SSD1306_I2C
 
-#Import utime library to implement delay
-import utime, time
+import json
+import os
+import urequests
 
-#Oled I2C connection
-# i2c=I2C(0,sda=Pin(0), scl=Pin(1), freq=400000)
-# oled = SSD1306_I2C(128, 64, i2c)
 
-#GPS Module UART Connection
+
+
+AP_NAME = "pi pico"
+AP_DOMAIN = "pipico.net"
+AP_TEMPLATE_PATH = "ap_templates"
+APP_TEMPLATE_PATH = "app_templates"
+WIFI_FILE = "wifi.json"
+WIFI_MAX_ATTEMPTS = 3
+
+
+# 와이파이 기록한 json이 있다면 바로 동작
+try:
+    os.stat(WIFI_FILE)
+
+# 없다면 Access Point 실행 후 사용자에게 WIFI 정보를 받아오게 됨
+except Exception:
+    # Either no wifi configuration file found, or something went wrong, 
+    # so go into setup mode.
+    setup_mode()
+    # start web server
+    server.run()
+
+with open(WIFI_FILE) as f:
+    wifi_credentials = json.load(f)
+f.close()
+
+WIFI_ID = wifi_credentials["ssid"]
+WIFI_PWD = wifi_credentials["password"]
 gps_module = UART(1, baudrate=9600, tx=Pin(4), rx=Pin(5))
 
-#print gps module connection details
-print(gps_module)
+get_time()
+print(time.localtime())
 
-#Used to Store NMEA Sentences
-buff = bytearray(255)
-
-TIMEOUT = False
-
-#store the status of satellite is fixed or not
-FIX_STATUS = False
-
-#Store GPS Coordinates
-latitude = ""
-longitude = ""
-satellites = ""
-gpsTime = ""
+SLEEP_TIME = 5 # 일단은 디버깅 쉽게 1초로 설정
+EMERGENCY_TIME = 10
+time_disconnected = 0
 
 
-#function to get gps Coordinates
-def getPositionData(gps_module):
-    global FIX_STATUS, TIMEOUT, latitude, longitude, satellites, gpsTime
-    
-    #run while loop to get gps data
-    #or terminate while loop after 5 seconds timeout
-    timeout = time.time() + 8   # 8 seconds from now
-    while True:
-        gps_module.readline()
-        buff = str(gps_module.readline())
-        #parse $GPGGA term
-        #b'$GPGGA,094840.000,2941.8543,N,07232.5745,E,1,09,0.9,102.1,M,0.0,M,,*6C\r\n'
-        # print(buff)
-        parts = buff.split(',')
-        print(parts[0])
-        
-        #if no gps displayed remove "and len(parts) == 15" from below if condition
-        if (parts[0] == "b'$GPGGA"):
-            print(123123)
-            if(parts[1] and parts[2] and parts[3] and parts[4] and parts[5] and parts[6] and parts[7]):
-                print(buff)
-                #print("Message ID  : " + parts[0])
-                #print("UTC time    : " + parts[1])
-                #print("Latitude    : " + parts[2])
-                #print("N/S         : " + parts[3])
-                #print("Longitude   : " + parts[4])
-                #print("E/W         : " + parts[5])
-                #print("Position Fix: " + parts[6])
-                #print("n sat       : " + parts[7])
-                
-                latitude = convertToDigree(parts[2])
-                # parts[3] contain 'N' or 'S'
-                if (parts[3] == 'S'):
-                    latitude = -latitude
-                longitude = convertToDigree(parts[4])
-                # parts[5] contain 'E' or 'W'
-                if (parts[5] == 'W'):
-                    longitude = -longitude
-                satellites = parts[7]
-                gpsTime = parts[1][0:2] + ":" + parts[1][2:4] + ":" + parts[1][4:6]
-                FIX_STATUS = True
-                break
-                
-        if (time.time() > timeout):
-            TIMEOUT = True
-            break
-        utime.sleep_ms(500)
-        
-#function to convert raw Latitude and Longitude
-#to actual Latitude and Longitude
-def convertToDigree(RawDegrees):
+url = "https://embeded-system-e8163-default-rtdb.firebaseio.com/"
 
-    RawAsFloat = float(RawDegrees)
-    firstdigits = int(RawAsFloat/100) #degrees
-    nexttwodigits = RawAsFloat - float(firstdigits*100) #minutes
-    
-    Converted = float(firstdigits + nexttwodigits/60.0)
-    Converted = '{0:.6f}'.format(Converted) # to 6 decimal places
-    return str(Converted)
-    
-    
+boot_time = time.localtime()
+time_disconnected = 0
+
+with open('log.txt', 'w') as f:
+    f.write('Boot Time : ' + str(boot_time))
+    f.write('\n')
+f.close()
+
+json_object = {}
+json_object['Time'] = []
+json_object['Latitude'] = []
+json_object['Longitude'] = []
+
+
+with open('log.json', 'w') as f:
+    json.dump(json_object, f)
+f.close()
+
+
+
 while True:
+    wlan = network.WLAN(network.STA_IF)
+    wlan.active(True)
+    wlan.connect(WIFI_ID, WIFI_PWD)
     
-    getPositionData(gps_module)
+    json_object['Time'].append(str(time.localtime()))
+    
+    latitude, longitude = getPositionData(gps_module)
+    json_object['Latitude'].append(latitude)
+    json_object['Longitude'].append(longitude)
+    
+    with open('log.json', 'w') as f:
+        json.dump(json_object, f)
+    f.close()
+    
+    if not wlan.isconnected() and wlan.status() != 0 and time_disconnected < EMERGENCY_TIME: #diconnected state
+        print("Disconnected state")
+        time_disconnected += 5
+        time.sleep(SLEEP_TIME)
+        
+    elif wlan.isconnected() and wlan.status() >= 0: # normal state
+        print("Connected state")
+        if time_disconnected:
+            time_disconnected = 0
 
-    #if gps data is found then print it on lcd
-    if(FIX_STATUS == True):
-        print("fix......")
-        # oled.fill(0)
-        # oled.text("Lat: "+latitude, 0, 0)
-        # oled.text("Lng: "+longitude, 0, 10)
-        # oled.text("No of Sat: "+satellites, 0, 20)
-        # oled.text("Time: "+gpsTime, 0, 30)
-        # oled.show()
-        print(latitude)
-        print(longitude)
-        print(satellites)
-        print(gpsTime)
+        urequests.patch(url+"/time_gps.json", json = json_object).json()
+        time.sleep(SLEEP_TIME)
+         
+    elif time_disconnected >= EMERGENCY_TIME: # emergency state
+        print('Emgergeny state')
+        time_disconnected += 5
+        time.sleep(SLEEP_TIME)
         
-        FIX_STATUS = False
-        
-    if(TIMEOUT == True):
-        print("Request Timeout: No GPS data is found.")
-        #--------------------------------------------------
-        #updated on 5-May-2022
-        # oled.fill(0)
-        # oled.text("No GPS data is found", 0, 0)
-        # oled.show()
-        # #--------------------------------------------------
-        TIMEOUT = False
+    
