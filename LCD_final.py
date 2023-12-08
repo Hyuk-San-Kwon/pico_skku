@@ -15,14 +15,12 @@ MOSI = 11
 SCK = 10
 CS = 9
 url = "https://embeded-system-e8163-default-rtdb.firebaseio.com/"
-phone_number = "0"
-num=0
-lcd_timer=None
+phone_number = 0
 '2inch frames'
 class LCD_2inch(framebuf.FrameBuffer):
     def __init__(self):
         self.width = 320
-        self.height = 199
+        self.height = 200
         
         self.cs = Pin(CS,Pin.OUT)
         self.rst = Pin(RST,Pin.OUT)
@@ -192,11 +190,11 @@ class LCD_2inch(framebuf.FrameBuffer):
 
         # 와이파이에 연결합니다
         if not wlan.isconnected():
-            wlan.connect("Galaxy S21 5G3add", "1234qwer") # 와이파이 정보 입력
+            wlan.connect("AndroidHotspot", "12345678") # 와이파이 정보 입력
             print("Waiting for Wi-Fi connection", end="...")
             while not wlan.isconnected():
                 gc.collect()
-                wlan.connect("Galaxy S21 5G3add", "1234qwer") # 와이파이 정보 입력
+                wlan.connect("AndroidHotspot", "12345678") # 와이파이 정보 입력
                 print(".", end="")
                 time.sleep(10)#Pico wifi delay=10~11초   
                 if wlan.isconnected()==True:
@@ -210,37 +208,7 @@ class LCD_2inch(framebuf.FrameBuffer):
         pwm = PWM(Pin(BL))
         pwm.freq(1000)
         pwm.duty_u16(32768)#max 65535
-        
-    def wifi(self):
-        if(num>2):
-            num=0
-            
-        LCD.fill(LCD.BLACK) #화면 초기화
-            
-        print("off now")
-        time.sleep(5)
-        print("don't off now")#이때 wifi 끌 시 Floating Point err
-        time.sleep(11)
-            
-        if not wlan.isconnected():
-            break; 
-            
-        gc.collect()
-        if wlan.isconnected():
-            phone_number=None #필수) 메모리 문제로 매번 초기화.
-            response= urequests.get(url+"/embeded_system/phone.json").json()#번호 받아오기
-            urequests.patch(url+"/embeded_system.json", json ={'state': num%3}).json()
-                #state의 값이 주기마다 달라질경우: connect// 아닐경우: disconnect
-            phone_number = response #업데이트
-            num+=1
-            
-    def no_wifi(self):
-        if not lcd_timer:
-                lcd_timer=Timer(period=5000,mode=Timer.ONE_SHOT,callback=self.polling_timer)
-        for i, number in enumerate(phone_number):   
-            x = (310-((i % 6) * 50 + 15) if i<6 else 280-((i % 6) * 50 + 15))
-            y = ((0 if i < 6 else 1)) * (90 + 20) + 10
-            self.draw_number(number, x, y, self.BLACK)
+    
         
 if __name__=='__main__':
     # WLAN 객체를 생성하고, 무선 LAN을 활성화합니다
@@ -248,34 +216,58 @@ if __name__=='__main__':
     LCD = LCD_2inch()
     LCD.fill(LCD.BLACK)
     wlan = network.WLAN(network.STA_IF)
-    wlan.active(True)#initialize
-    
-    LCD.wifi_check()#wifi확인
-    LCD.firebase()#firebase setting
-
-    phone_number = urequests.get(url+"/embeded_system/phone.json").json()#현재 저장값 받아오기
+    wlan.active(True)
+    LCD.wifi_check()
+    LCD.firebase()
+    lcd_timer=None
+    phone_number = urequests.get(url+"/embeded_system/phone.json").json()
     gc.collect()
-    
-    
+    num=True
     while(1):
         print("return")
         while wlan.isconnected():
-            wifi()#wifi 연결되었을때
+            num= not num
+            LCD.fill(LCD.BLACK) #화면 초기화
+            
+            print("off now")
+            time.sleep(5)
+            print("don't off now")#이때 wifi 끌 시 Floating Point err
+            time.sleep(11)
+            
+            if not wlan.isconnected():
+                break
+            
+            gc.collect()
+            if wlan.isconnected():
+                phone_number=None #필수) 메모리 문제로 매번 초기화.
+                response= urequests.get(url+"/embeded_system/phone.json").json()#번호 받아오기
+                phone_number = response #업데이트
+                gc.collect()
+                urequests.patch(url+"/embeded_system.json", json ={'state':num }).json()
+                #state의 값이 주기마다 달라질경우: connect// 아닐경우: disconnect
+                
             if lcd_timer:
                  lcd_timer.deinit()  # 타이머 중지
                  lcd_timer = None
             LCD.fill(LCD.BLACK) #첫 루프때 화면 초기화 안되기에 다시 해줌. 
             LCD.show()
-            
         time.sleep(7)
         if not wlan.isconnected():
             print("no wifi loop")
-            no_wifi()#wifi 연결 안되었을때 
+            if not lcd_timer:
+                print("Go here")
+                lcd_timer=Timer(period=5000,mode=Timer.ONE_SHOT,callback=LCD.polling_timer)
+        for i, number in enumerate(phone_number):  #렌즈 있을 때 
+            x = (310-((i % 6) * 50 + 15) if i<6 else 280-((i % 6) * 50 + 15))
+            y = ((0 if i < 6 else 1)) * (90 + 20) + 10
+            LCD.draw_number(number, x, y, LCD.BLACK)
+        print("Final loop")
         LCD.show()
         time.sleep(5)
     
         
         
+
 
 
 
