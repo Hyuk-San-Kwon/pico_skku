@@ -35,7 +35,7 @@ class LCD_2inch(framebuf.FrameBuffer):
         super().__init__(self.buffer, self.width, self.height, framebuf.RGB565)
         self.init_display()
         
-        self.RED   =   0x07E0
+        self.GRAY   =   0x2222
         self.GREEN =   0x001F
         self.BLUE  =   0xF800
         self.WHITE =   0xffff
@@ -249,7 +249,7 @@ if __name__=='__main__':
             if lcd_timer:
                  lcd_timer.deinit()  # 타이머 중지
                  lcd_timer = None
-            LCD.fill(LCD.BLACK) #첫 루프때 화면 초기화 안되기에 다시 해줌. 
+            LCD.fill(LCD.GRAY) #첫 루프때 화면 초기화 안되기에 다시 해줌. 
             LCD.show()
         time.sleep(7)
         if not wlan.isconnected():
