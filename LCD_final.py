@@ -35,7 +35,7 @@ class LCD_2inch(framebuf.FrameBuffer):
         super().__init__(self.buffer, self.width, self.height, framebuf.RGB565)
         self.init_display()
         
-        self.GRAY   =   0x2222
+        self.GRAY   =  0x2222
         self.GREEN =   0x001F
         self.BLUE  =   0xF800
         self.WHITE =   0xffff
