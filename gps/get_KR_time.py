@@ -62,6 +62,6 @@ def get_time():
     set_time()
 
 # led.on()
-# 
+# get_time()
 # print(time.localtime())
 # led.off()

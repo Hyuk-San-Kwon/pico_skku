@@ -9,7 +9,7 @@ wlan.active(True)
 
 # 와이파이에 연결합니다
 if not wlan.isconnected():
-    wlan.connect("", "")
+    wlan.connect("AndroidHotspot5928", "asdfasdf1234")
     print("Waiting for Wi-Fi connection", end="...")
     while not wlan.isconnected():
         print(".", end="")

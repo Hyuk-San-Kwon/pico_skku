@@ -59,21 +59,17 @@ EMERGENCY_TIME = 2
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
 wlan.connect(WIFI_ID, WIFI_PWD)
+time.sleep(2)
 
 
+print(wlan.isconnected())
 url = "https://embeded-system-e8163-default-rtdb.firebaseio.com/"
-phone_number = 0
+phone_number = "01020515928"
 
-try:
-    phone_number = urequests.get(url+"/embeded_system/phone.json").json()
-except:
-    print("Don't get phone number")
 
 gc.collect()
 LCD = LCD_init()
 lcd_timer=None
-
-
 
 boot_time = time.time()
 time_disconnected = 0
@@ -87,6 +83,12 @@ while True:
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
     wlan.connect(WIFI_ID, WIFI_PWD)
+    
+    try:
+        phone_number = urequests.get(url+"/embeded_system/phone.json").json()
+        time.sleep(1)
+    except:
+        print("Don't get phone number")
     
     print(phone_number)
 
