@@ -77,8 +77,10 @@ lcd_timer=None
 
 url = "https://embeded-system-e8163-default-rtdb.firebaseio.com/"
 phone_number = 0
-phone_number = urequests.get(url+"/embeded_system/phone.json").json()
-
+try:
+    phone_number = urequests.get(url+"/embeded_system/phone.json").json()
+except:
+    print("Disconnected")
 boot_time = time.time()
 time_disconnected = 0
 
@@ -96,11 +98,12 @@ while True:
         time_disconnected += 5
         if not lcd_timer:
             lcd_timer = Timer(period=5000,mode=Timer.ONE_SHOT,callback=LCD.polling_timer)
-        for i, number in enumerate(phone_number):  #렌즈 있을 때 
-            x = (310-((i % 6) * 50 + 15) if i<6 else 280-((i % 6) * 50 + 15))
-            y = ((0 if i < 6 else 1)) * (90 + 20) + 10
-            LCD.draw_number(number, x, y, LCD.BLACK)
-        LCD.show()
+        if phone_number:
+            for i, number in enumerate(phone_number):  #렌즈 있을 때 
+                x = (310-((i % 6) * 50 + 15) if i<6 else 280-((i % 6) * 50 + 15))
+                y = ((0 if i < 6 else 1)) * (90 + 20) + 10
+                LCD.draw_number(number, x, y, LCD.BLACK)
+            LCD.show()
         time.sleep(SLEEP_TIME)
         
     elif wlan.isconnected() and wlan.status() >= 0: # normal state
