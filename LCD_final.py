@@ -40,7 +40,7 @@ class LCD_2inch(framebuf.FrameBuffer):
         self.BLUE  =   0xF800
         self.WHITE =   0xffff
         self.BLACK =   0x0000
-
+        self.GRAY =    0x0010
 
 
 # Example usage:  # Assuming this is your LCD object
@@ -190,11 +190,13 @@ class LCD_2inch(framebuf.FrameBuffer):
 
         # 와이파이에 연결합니다
         if not wlan.isconnected():
-            wlan.connect("AndroidHotspot", "12345678") # 와이파이 정보 입력
+            #wlan.connect("AndroidHotspot", "12345678") # 와이파이 정보 입력
+            wlan.connect("Galaxy S21 5G3add", "1234qwer") # 와이파이 정보 입력
             print("Waiting for Wi-Fi connection", end="...")
             while not wlan.isconnected():
                 gc.collect()
-                wlan.connect("AndroidHotspot", "12345678") # 와이파이 정보 입력
+                #wlan.connect("AndroidHotspot", "12345678") # 와이파이 정보 입력
+                wlan.connect("Galaxy S21 5G3add", "1234qwer") 
                 print(".", end="")
                 time.sleep(10)#Pico wifi delay=10~11초   
                 if wlan.isconnected()==True:
@@ -228,10 +230,12 @@ if __name__=='__main__':
         while wlan.isconnected():
             num= not num
             LCD.fill(LCD.BLACK) #화면 초기화
-            
+            LCD.show()
             print("off now")
             time.sleep(5)
             print("don't off now")#이때 wifi 끌 시 Floating Point err
+            LCD.fill(LCD.GRAY)
+            LCD.show()
             time.sleep(11)
             
             if not wlan.isconnected():
@@ -267,6 +271,7 @@ if __name__=='__main__':
     
         
         
+
 
 
 
