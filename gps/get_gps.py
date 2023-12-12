@@ -38,7 +38,7 @@ def getPositionData(gps_module):
         buff = str(gps_module.readline())
         #parse $GPGGA term
         #b'$GPGGA,094840.000,2941.8543,N,07232.5745,E,1,09,0.9,102.1,M,0.0,M,,*6C\r\n'
-        # print(buff)
+        print(buff)
         parts = buff.split(',')
         print(parts[0])
         

@@ -3,17 +3,13 @@ import time
 
 from LCD_2 import LCD_2inch
 from get_wifi import setup_mode
-from phew import access_point, connect_to_wifi, is_connected_to_wifi, dns, server
-from phew.template import render_template
+from phew import server
 from tools.allocations import print_mem
 from machine import Timer
 
 import gc
 import json
-import machine
 import os
-import utime
-import _thread
 import urequests
 
 print_mem()
@@ -30,16 +26,15 @@ def LCD_init():
     gc.collect()
     LCD = LCD_2inch()
     LCD.fill(LCD.BLACK)
-    wlan = network.WLAN(network.STA_IF)
-    wlan.active(True)
-    LCD.wifi_check()
     LCD.firebase()
     gc.collect()
     LCD.num = True
     
     return LCD
-
-# 와이파이 기록한 json이 있다면 바로 동작
+def polling_timer(LCD): #Polling 되었을 시 화면 켜기
+    # if not wlan.isconnected(): #Floating point 방지
+    LCD.fill(LCD.WHITE)
+    LCD.show()
 try:
     os.stat(WIFI_FILE)
 
@@ -58,58 +53,54 @@ f.close()
 WIFI_ID = wifi_credentials["ssid"]
 WIFI_PWD = wifi_credentials["password"]
 
-SLEEP_TIME = 5 # 일단은 디버깅 쉽게 1초로 설정
-EMERGENCY_TIME = 10
-BL = 13
-DC = 8
-RST = 12
-MOSI = 11
-SCK = 10
-CS = 9
-
+SLEEP_TIME = 1 # 일단은 디버깅 쉽게 1초로 설정
+EMERGENCY_TIME = 2
 
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
 wlan.connect(WIFI_ID, WIFI_PWD)
 
-LCD = LCD_init()
-lcd_timer=None
 
 url = "https://embeded-system-e8163-default-rtdb.firebaseio.com/"
 phone_number = 0
+
 try:
     phone_number = urequests.get(url+"/embeded_system/phone.json").json()
 except:
-    print("Disconnected")
+    print("Don't get phone number")
+
+gc.collect()
+LCD = LCD_init()
+lcd_timer=None
+
+
+
 boot_time = time.time()
 time_disconnected = 0
-
+gc.collect()
 
 
 while True:
     
+    gc.collect()
+    print_mem()
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
     wlan.connect(WIFI_ID, WIFI_PWD)
+    
+    print(phone_number)
 
     if not wlan.isconnected() and wlan.status() != 0 and time_disconnected < EMERGENCY_TIME: #diconnected state
         print("Disconnected state")
+        time_disconnected += 5   
         print(time_disconnected)
-        time_disconnected += 5
-        if not lcd_timer:
-            lcd_timer = Timer(period=5000,mode=Timer.ONE_SHOT,callback=LCD.polling_timer)
-        if phone_number:
-            for i, number in enumerate(phone_number):  #렌즈 있을 때 
-                x = (310-((i % 6) * 50 + 15) if i<6 else 280-((i % 6) * 50 + 15))
-                y = ((0 if i < 6 else 1)) * (90 + 20) + 10
-                LCD.draw_number(number, x, y, LCD.BLACK)
-            LCD.show()
         time.sleep(SLEEP_TIME)
         
     elif wlan.isconnected() and wlan.status() >= 0: # normal state
         print("Connected state")
         LCD.num = False
         LCD.fill(LCD.BLACK)
+        LCD.show()
         print("LCD off")
         
         if time_disconnected:
@@ -124,7 +115,17 @@ while True:
     
     elif time_disconnected >= EMERGENCY_TIME: # emergency state
         print('Emgergeny state')
+     
+        if not lcd_timer:
+            lcd_timer = Timer(period=5000,mode=Timer.ONE_SHOT,callback=polling_timer(LCD))
+        if phone_number:
+            print(phone_number)
+            for i, number in enumerate(phone_number):  #렌즈 있을 때 
+                x = (285-((i % 6) * 50 + 15) if i<6 else 280-((i % 6) * 50 + 15))
+                y = ((0 if i < 6 else 1)) * (90 + 15) + 5
+                LCD.draw_number(number, x, y, LCD.BLACK)
+            
+            LCD.show()
         time_disconnected += 5
         time.sleep(SLEEP_TIME)
         
-    
